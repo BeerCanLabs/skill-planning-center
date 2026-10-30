@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import copy
+import json
 from typing import Any
 
 from .client import (
@@ -15,7 +17,7 @@ from .client import (
     list_schedules,
 )
 
-__all__ = ["TOOL_NAMES", "tool_definitions", "handle_tool_call"]
+__all__ = ["TOOL_NAMES", "tool_definitions", "handle_tool_call", "tools"]
 
 TOOL_NAMES = (
     "list_volunteer_schedules",
@@ -149,7 +151,7 @@ _TOOLS: list[dict] = [
 
 def tool_definitions() -> list[dict]:
     """Return tool schemas suitable for passing to model tool calling."""
-    return [t.copy() for t in _TOOLS]
+    return copy.deepcopy(_TOOLS)
 
 
 def handle_tool_call(name: str, args: dict[str, Any]) -> dict[str, Any]:
@@ -182,3 +184,34 @@ def handle_tool_call(name: str, args: dict[str, Any]) -> dict[str, Any]:
         return e.as_result()
     except Exception as e:
         return {"ok": False, "error": str(e)}
+
+
+def _make_handler(name: str):
+    def handler(arguments: dict[str, Any] | None = None, context: dict[str, Any] | None = None) -> str:
+        ctx = context or {}
+        args = arguments or {}
+        if ctx.get("dryRun") is True and name in (
+            "accept_volunteer_schedule",
+            "decline_volunteer_schedule",
+            "checkin_church_volunteer",
+        ):
+            return json.dumps({"ok": True, "dryRun": True, "tool": name})
+        res = handle_tool_call(name, args)
+        if ctx.get("smoke") is True and not res.get("ok"):
+            return f"error: {res.get('error')}: {res.get('message') or res}"
+        return json.dumps(res)
+
+    return handler
+
+
+def tools() -> list[dict[str, Any]]:
+    out = []
+    for tool in tool_definitions():
+        fn = tool["function"]
+        out.append({
+            "name": fn["name"],
+            "description": fn["description"],
+            "parameters": fn["parameters"],
+            "handler": _make_handler(fn["name"]),
+        })
+    return out
