@@ -12,7 +12,9 @@ from .client import (
     list_schedules,
     request_pco,
 )
-from .tools import TOOL_NAMES, handle_tool_call, tool_definitions
+from .tools import TOOL_NAMES, handle_tool_call, tool_definitions, tools
+
+__version__ = "1.0.0"
 
 __all__ = [
     "GatekeeperEgressNotConfigured",
@@ -27,5 +29,7 @@ __all__ = [
     "check_in_volunteer",
     "tool_definitions",
     "handle_tool_call",
+    "tools",
     "TOOL_NAMES",
+    "__version__",
 ]

@@ -1,11 +1,13 @@
-# Skill manifest (DESIGN_AUTHORITY §6.14 SK1, SK2), in the schema of agent-factory
-# packages/contract/src/skill.ts (docs/SKILLS.md).
+spec: 1
 id: planning-center
-version: 0.1.1
+version: 1.0.0
 name: Planning Center Online
 description: Church Planning Center Online (PCO) Services and Check-Ins skill for volunteer schedules, shift acceptance/decline, and kiosk volunteer check-in with name tag printing.
 language: python
 entry: planning_center
-visibility: public
 requires:
   routes: [planning-center]
+smoke:
+  action: list-volunteer-schedules
+  input:
+    future_only: true
